@@ -1,5 +1,6 @@
 import 'dart:math';
 
+import 'package:flutter/animation.dart';
 import 'package:flutter/material.dart';
 import 'package:prime_chuck_arch/screens/facts_screen.dart';
 
@@ -28,16 +29,19 @@ class Die extends StatelessWidget {
   final bool isPrime;
   final Function disable;
   final bool isDisabled;
+  final AnimationController animationController;
 
-  Die._(
-      {this.num,
-      this.isPrime,
-      this.isEven,
-      this.disable,
-      this.isDisabled,
-      this.primeColor,
-      this.evenColor,
-      this.oddColor});
+  Die._({
+    this.num,
+    this.isPrime,
+    this.isEven,
+    this.disable,
+    this.isDisabled,
+    this.primeColor,
+    this.evenColor,
+    this.oddColor,
+    this.animationController,
+  });
 
   factory Die({
     int num,
@@ -46,6 +50,7 @@ class Die extends StatelessWidget {
     Color primeColor,
     Color evenColor,
     Color oddColor,
+    AnimationController animationController,
   }) {
     bool even = num % 2 == 0;
     bool prime = checkPrime(num);
@@ -58,6 +63,7 @@ class Die extends StatelessWidget {
       evenColor: evenColor,
       primeColor: primeColor,
       oddColor: oddColor,
+      animationController: animationController,
     );
   }
 
@@ -67,39 +73,49 @@ class Die extends StatelessWidget {
     Color darkenedColor = darken(dieColor, 0.8);
     return GestureDetector(
       onTap: () => _onTap(context, dieColor),
-      child: Container(
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(10),
-          gradient: isPrime && !isDisabled
-              ? LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [darkenedColor, darken(primeColor, 0.8)],
-                )
-              : null,
-          color: isPrime && !isDisabled ? null : darkenedColor,
-        ),
-        child: Container(
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(30),
-            gradient: isPrime && !isDisabled
-                ? LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [dieColor, primeColor],
-                  )
-                : null,
-            color: isPrime && !isDisabled ? null : dieColor,
-          ),
-          child: Center(
-            child: Material(
-              type: MaterialType.transparency,
-              child: Text(
-                num.toString(),
-                style: TextStyle(
-                    fontSize: 40,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black54),
+      // outer darker container, to give effect of shadow on the die
+      child: RotationTransition(
+        turns: Tween(begin: 0.0, end: 0.05).animate(
+            CurvedAnimation(parent: animationController, curve: ShakeCurve())),
+        child: SlideTransition(
+          position: Tween<Offset>(begin: Offset.zero, end: Offset(0.1, 0.1))
+              .animate(CurvedAnimation(
+                  parent: animationController, curve: Curves.bounceInOut)),
+          child: Container(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(10),
+              gradient: isPrime && !isDisabled
+                  ? LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [darkenedColor, darken(primeColor, 0.8)],
+                    )
+                  : null,
+              color: isPrime && !isDisabled ? null : darkenedColor,
+            ),
+            child: Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(30),
+                gradient: isPrime && !isDisabled
+                    ? LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [dieColor, primeColor],
+                      )
+                    : null,
+                color: isPrime && !isDisabled ? null : dieColor,
+              ),
+              child: Center(
+                child: Material(
+                  type: MaterialType.transparency,
+                  child: Text(
+                    num.toString(),
+                    style: TextStyle(
+                        fontSize: 40,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black54),
+                  ),
+                ),
               ),
             ),
           ),
@@ -136,4 +152,9 @@ class Die extends StatelessWidget {
     return Color.fromARGB(color.alpha, (color.red * amount).round(),
         (color.green * amount).round(), (color.blue * amount).round());
   }
+}
+
+class ShakeCurve extends Curve {
+  @override
+  double transform(double t) => sin(t * pi * 2.5);
 }

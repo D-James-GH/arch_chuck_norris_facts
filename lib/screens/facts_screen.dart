@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:prime_chuck_arch/models/dad_joke_model.dart';
 import 'package:prime_chuck_arch/services/services.dart';
 import 'package:prime_chuck_arch/widgets/path_container.dart';
+import 'package:prime_chuck_arch/widgets/speech_bubble.dart';
 
 class FactsScreen extends StatefulWidget {
   final int num;
@@ -34,12 +35,14 @@ class _FactsScreenState extends State<FactsScreen> {
         ),
       ),
       body: Builder(builder: (BuildContext context) {
+        // use a builder so that the scaffold context is available in the body
         return Hero(
           tag: widget.num,
           child: Container(
             height: double.infinity,
             width: double.infinity,
             decoration: BoxDecoration(
+              // same gradient as the die on the home page
               gradient: LinearGradient(
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
@@ -49,6 +52,8 @@ class _FactsScreenState extends State<FactsScreen> {
                 ],
               ),
             ),
+            // main area wrapped in SingleChildScroll view to prevent render overflow on
+            // hero animation
             child: SingleChildScrollView(
               child: SizedBox(
                 height: MediaQuery.of(context).size.height -
@@ -71,52 +76,7 @@ class _FactsScreenState extends State<FactsScreen> {
                               width: MediaQuery.of(context).size.width / 2,
                             ),
                           ),
-                          Positioned(
-                            bottom: 149,
-                            left: MediaQuery.of(context).size.width / 2 - 15,
-                            child: Transform.rotate(
-                              angle: pi / 4,
-                              child: Container(
-                                height: 30,
-                                width: 30,
-                                decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(4),
-                                  color: Colors.white,
-                                ),
-                              ),
-                            ),
-                          ),
-                          Positioned(
-                            right: 0,
-                            bottom: 130,
-                            child: Container(
-                              constraints:
-                                  BoxConstraints(maxHeight: 200, minHeight: 50),
-                              margin: EdgeInsets.all(8),
-                              padding: EdgeInsets.all(8),
-                              width: MediaQuery.of(context).size.width / 2,
-                              decoration: BoxDecoration(
-                                boxShadow: [
-                                  BoxShadow(
-                                      color: Colors.black.withOpacity(0.1),
-                                      offset: Offset(5, 0),
-                                      blurRadius: 5,
-                                      spreadRadius: 5)
-                                ],
-                                color: Colors.white,
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: SingleChildScrollView(
-                                child: Material(
-                                  color: Colors.transparent,
-                                  child: Text(
-                                    _quote != null ? _quote : '',
-                                    style: TextStyle(fontSize: 18),
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
+                          SpeechBubble(quote: _quote),
                         ],
                       ),
                     ),
@@ -185,7 +145,7 @@ class _FactsScreenState extends State<FactsScreen> {
   }
 
   void _getFact() async {
-    var allFacts = await services.getJson();
+    var allFacts = await services.getChuckFact();
     setState(() {
       _quote = allFacts[Random().nextInt(allFacts.length)].fact;
     });
