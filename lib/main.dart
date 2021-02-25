@@ -1,22 +1,24 @@
 import 'package:flutter/material.dart';
-import 'package:prime_chuck_arch/screens/facts_screen.dart';
+
 import 'screens/numbers_screen.dart';
 
 void main() {
   runApp(MyApp());
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
   // This widget is the root of your application.
+  @override
+  _MyAppState createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  MaterialColor _primarySwatch = Colors.green;
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Chuck Prime',
-      routes: {
-        '/': (context) => NumbersScreen(),
-        '/facts': (context) => FactsScreen(),
-      },
-      initialRoute: '/',
       theme: ThemeData(
         // This is the theme of your application.
         //
@@ -27,13 +29,21 @@ class MyApp extends StatelessWidget {
         // or simply save your changes to "hot reload" in a Flutter IDE).
         // Notice that the counter didn't reset back to zero; the application
         // is not restarted.
-        primarySwatch: Colors.teal,
+        primarySwatch: _primarySwatch,
         // This makes the visual density adapt to the platform that you run
         // the app on. For desktop platforms, the controls will be smaller and
         // closer together (more dense) than on mobile platforms.
         visualDensity: VisualDensity.adaptivePlatformDensity,
       ),
-      // home: NumbersScreen(),
+      home: NumbersScreen(
+        setPrimarySwatch: setPrimarySwatch,
+      ),
     );
+  }
+
+  void setPrimarySwatch(MaterialColor color) {
+    setState(() {
+      _primarySwatch = color;
+    });
   }
 }

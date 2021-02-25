@@ -1,4 +1,5 @@
 import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:prime_chuck_arch/models/dad_joke_model.dart';
 import 'package:prime_chuck_arch/services/services.dart';
@@ -8,7 +9,10 @@ import 'package:prime_chuck_arch/widgets/speech_bubble.dart';
 class FactsScreen extends StatefulWidget {
   final int num;
   final Color color;
-  FactsScreen({Key key, this.num, this.color}) : super(key: key);
+  final Color primeColor;
+
+  FactsScreen({Key key, this.num, this.color, this.primeColor})
+      : super(key: key);
 
   @override
   _FactsScreenState createState() => _FactsScreenState();
@@ -48,7 +52,7 @@ class _FactsScreenState extends State<FactsScreen> {
                 end: Alignment.bottomCenter,
                 colors: [
                   widget.color,
-                  Colors.blue,
+                  widget.primeColor,
                 ],
               ),
             ),

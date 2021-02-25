@@ -1,12 +1,15 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:prime_chuck_arch/widgets/color_picker_button.dart';
 import 'package:prime_chuck_arch/widgets/color_select.dart';
 import 'package:prime_chuck_arch/widgets/die.dart';
 import 'package:prime_chuck_arch/widgets/shuffle_button.dart';
 
 class NumbersScreen extends StatefulWidget {
-  NumbersScreen({Key key}) : super(key: key);
+  final Function setPrimarySwatch;
+
+  NumbersScreen({Key key, this.setPrimarySwatch}) : super(key: key);
 
   @override
   _NumbersScreenState createState() => _NumbersScreenState();
@@ -18,7 +21,7 @@ class _NumbersScreenState extends State<NumbersScreen>
   List<int> _numbers = List.generate(100, (index) => index + 1);
   bool _isColorPickerOpen = false;
   AnimationController
-      _caretAnimationController; // controls the caret in the appbar
+  _caretAnimationController; // controls the caret in the appbar
   AnimationController _shakeAnimationController;
   Color _primeColor = Colors.blue;
   Color _evenColor = Colors.red;
@@ -28,10 +31,9 @@ class _NumbersScreenState extends State<NumbersScreen>
   void initState() {
     super.initState();
     _caretAnimationController = AnimationController(
-        vsync: this,
-        duration: Duration(milliseconds: 450),
-        lowerBound: 0,
-        upperBound: 1);
+      vsync: this,
+      duration: Duration(milliseconds: 450),
+    );
     _shakeAnimationController = AnimationController(
       vsync: this,
       duration: Duration(milliseconds: 200),
@@ -40,99 +42,110 @@ class _NumbersScreenState extends State<NumbersScreen>
 
   @override
   Widget build(BuildContext context) {
-    double spacing = 10;
     return Scaffold(
-      appBar: AppBar(
-        leading: ShuffleButton(
-          onTap: _shuffle,
-        ),
-        centerTitle: true,
-        title: ColorPickerButton(
-          animationController: _caretAnimationController,
-          onTap: _showColorPicker,
-        ),
-        actions: [
-          IconButton(
-              icon: Icon(
-                Icons.refresh,
-                size: 30,
-              ),
-              onPressed: reset),
-          SizedBox(
-            width: 10,
-          ),
-        ],
-      ),
-      // ============== Scaffold body ============================================
+      appBar: _buildAppBar(),
+      // ============== Scaffold body =========================================
       body: Column(
         children: [
           // Color picker animated container
-          AnimatedContainer(
-            decoration: BoxDecoration(
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.1),
-                    blurRadius: 5,
-                    spreadRadius: 5,
-                  ),
-                ],
-                borderRadius: BorderRadius.only(
-                  bottomLeft: Radius.circular(10),
-                  bottomRight: Radius.circular(10),
-                )),
-            duration: Duration(milliseconds: 300),
-            height: _isColorPickerOpen ? 100 : 0,
-            width: double.infinity,
-            child: SingleChildScrollView(
-              child: ColorSelector(
-                setColor: setColor,
-                primeColor: _primeColor,
-                evenColor: _evenColor,
-                oddColor: _oddColor,
-              ),
-            ),
+          ColorSelector(
+            primeColor: _primeColor,
+            evenColor: _evenColor,
+            oddColor: _oddColor,
+            setColor: _setColor,
+            isColorPickerOpen: _isColorPickerOpen,
           ),
-          Expanded(
-            child: GridView.count(
-              padding:
-                  EdgeInsets.only(top: spacing, right: spacing, left: spacing),
-              crossAxisCount: 4,
-              mainAxisSpacing: spacing,
-              crossAxisSpacing: spacing,
-              children: _numbers
-                  .map(
-                    (num) => Hero(
-                      tag: num,
-                      child: Die(
-                        animationController: _shakeAnimationController,
-                        oddColor: _oddColor,
-                        primeColor: _primeColor,
-                        evenColor: _evenColor,
-                        num: num,
-                        isDisabled: _disabled[num] ?? false,
-                        disable: _disable,
-                      ),
-                    ),
-                  )
-                  .toList(),
-            ),
-          ),
+          _buildGridView(),
         ],
       ),
     );
   }
 
-  void setColor({Color setPrime, Color setEven, Color setOdd}) {
+  AppBar _buildAppBar() {
+    return AppBar(
+      leading: ShuffleButton(
+        onTap: _shuffleNumbers,
+      ),
+      centerTitle: true,
+      title: ColorPickerButton(
+        animationController: _caretAnimationController,
+        onTap: _showColorPicker,
+      ),
+      actions: [
+        IconButton(
+            icon: Icon(
+              Icons.refresh,
+              size: 30,
+            ),
+            onPressed: _reset),
+        SizedBox(
+          width: 10,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildGridView() {
+    double spacing = 10;
+    return Expanded(
+      child: GridView.count(
+        padding: EdgeInsets.only(top: spacing, right: spacing, left: spacing),
+        crossAxisCount: 4,
+        mainAxisSpacing: spacing,
+        crossAxisSpacing: spacing,
+        children: _numbers.map(
+          (num) {
+            bool isEven = num % 2 == 0;
+            bool isPrime = checkPrime(num);
+            return Hero(
+              tag: num,
+              child: Die(
+                animationController: _shakeAnimationController,
+                oddColor: _oddColor,
+                primeColor: _primeColor,
+                evenColor: _evenColor,
+                num: num,
+                isDisabled: _disabled[num] ?? false,
+                disable: _disable,
+                isEven: isEven,
+                isPrime: isPrime,
+              ),
+            );
+          },
+        ).toList(),
+      ),
+    );
+  }
+
+// used in the initialization of the die class
+  bool checkPrime(int num) {
+    if (num < 2) {
+      // 1 and 0 are not prime
+      return false;
+    }
+    // anything larger than the sqrt(num) will be too large
+    for (int i = 2; i <= sqrt(num); i++) {
+      if (num % i == 0) {
+        return false;
+      }
+    }
+    // number is prime
+    return true;
+  }
+
+  void _setColor(
+      {MaterialColor setPrime, MaterialColor setEven, MaterialColor setOdd}) {
     // pass down to color picker to allow the user to set the three colors used on the die
     setState(() {
       if (setPrime != null) {
-        _primeColor = setPrime;
+        _primeColor = setPrime[500];
       }
       if (setEven != null) {
-        _evenColor = setEven;
+        _evenColor = setEven[500];
       }
       if (setOdd != null) {
-        _oddColor = setOdd;
+        _oddColor = setOdd[500];
+        widget.setPrimarySwatch(setOdd);
       }
     });
   }
@@ -157,7 +170,7 @@ class _NumbersScreenState extends State<NumbersScreen>
     });
   }
 
-  void reset() {
+  void _reset() {
     // sort the dice numbers from 1-100 and reset all disabled dice
     var newList = _numbers;
     newList.sort();
@@ -167,14 +180,14 @@ class _NumbersScreenState extends State<NumbersScreen>
       _evenColor = Colors.red;
       _oddColor = Colors.green;
     });
+    widget.setPrimarySwatch(Colors.green);
   }
 
-  void _shuffle() {
+  void _shuffleNumbers() {
     var newList = _numbers;
     newList.shuffle();
-    // _shakeAnimationController
-    //     .forward()
-    //     .then((value) => _shakeAnimationController.reverse());
+
+    // make the animation repeat while the time out is happening
     TickerFuture tickerFuture = _shakeAnimationController.repeat(reverse: true);
     tickerFuture.timeout(Duration(seconds: 1), onTimeout: () {
       _shakeAnimationController.forward(from: 0);

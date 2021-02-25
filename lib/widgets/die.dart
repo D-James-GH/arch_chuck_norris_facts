@@ -1,24 +1,8 @@
-import 'dart:math';
 
 import 'package:flutter/animation.dart';
 import 'package:flutter/material.dart';
 import 'package:prime_chuck_arch/screens/facts_screen.dart';
-
-// used in the initialization of the die class
-bool checkPrime(int num) {
-  if (num < 2) {
-    // 1 and 0 are not prime
-    return false;
-  }
-  // anything larger than the sqrt(num) will be too large
-  for (int i = 2; i <= sqrt(num); i++) {
-    if (num % i == 0) {
-      return false;
-    }
-  }
-  // number is prime
-  return true;
-}
+import 'package:prime_chuck_arch/widgets/die_shake_animation.dart';
 
 class Die extends StatelessWidget {
   final Color primeColor;
@@ -27,73 +11,45 @@ class Die extends StatelessWidget {
   final int num;
   final bool isEven;
   final bool isPrime;
-  final Function disable;
   final bool isDisabled;
+  final Function disable;
   final AnimationController animationController;
 
-  Die._({
-    this.num,
-    this.isPrime,
-    this.isEven,
-    this.disable,
-    this.isDisabled,
-    this.primeColor,
-    this.evenColor,
-    this.oddColor,
-    this.animationController,
-  });
-
-  factory Die({
-    int num,
-    Function disable,
-    bool isDisabled = false,
-    Color primeColor,
-    Color evenColor,
-    Color oddColor,
-    AnimationController animationController,
-  }) {
-    bool even = num % 2 == 0;
-    bool prime = checkPrime(num);
-    return Die._(
-      num: num,
-      isEven: even,
-      isPrime: prime,
-      disable: disable,
-      isDisabled: isDisabled,
-      evenColor: evenColor,
-      primeColor: primeColor,
-      oddColor: oddColor,
-      animationController: animationController,
-    );
-  }
+  Die({
+    Key key,
+    this.isPrime = false,
+    this.isEven = false,
+    this.isDisabled = false,
+    @required this.num,
+    @required this.disable,
+    @required this.primeColor,
+    @required this.evenColor,
+    @required this.oddColor,
+    @required this.animationController,
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    Color dieColor = calcColor();
-    Color darkenedColor = darken(dieColor, 0.8);
-    return GestureDetector(
-      onTap: () => _onTap(context, dieColor),
-      // outer darker container, to give effect of shadow on the die
-      child: RotationTransition(
-        turns: Tween(begin: 0.0, end: 0.05).animate(
-            CurvedAnimation(parent: animationController, curve: ShakeCurve())),
-        child: SlideTransition(
-          position: Tween<Offset>(begin: Offset.zero, end: Offset(0.1, 0.1))
-              .animate(CurvedAnimation(
-                  parent: animationController, curve: Curves.bounceInOut)),
-          child: Container(
+    Color dieColor = _calcColor();
+    Color darkenedColor = _darken(dieColor, 0.8);
+    return DieShakeAnimation(
+      animationController: animationController,
+      child: Material(
+        child: InkWell(
+          onTap: () => _onTap(context, dieColor),
+          child: Ink(
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(10),
               gradient: isPrime && !isDisabled
                   ? LinearGradient(
                       begin: Alignment.topCenter,
                       end: Alignment.bottomCenter,
-                      colors: [darkenedColor, darken(primeColor, 0.8)],
+                      colors: [darkenedColor, _darken(primeColor, 0.8)],
                     )
                   : null,
               color: isPrime && !isDisabled ? null : darkenedColor,
             ),
-            child: Container(
+            child: Ink(
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(30),
                 gradient: isPrime && !isDisabled
@@ -132,13 +88,14 @@ class Die extends StatelessWidget {
           builder: (context) => FactsScreen(
             num: num,
             color: color,
+            primeColor: primeColor,
           ),
         ),
       );
     }
   }
 
-  Color calcColor() {
+  Color _calcColor() {
     if (isDisabled) {
       return Color(0xffaaaaaa);
     }
@@ -148,13 +105,8 @@ class Die extends StatelessWidget {
     return oddColor;
   }
 
-  Color darken(Color color, double amount) {
+  Color _darken(Color color, double amount) {
     return Color.fromARGB(color.alpha, (color.red * amount).round(),
         (color.green * amount).round(), (color.blue * amount).round());
   }
-}
-
-class ShakeCurve extends Curve {
-  @override
-  double transform(double t) => sin(t * pi * 2.5);
 }
