@@ -21,7 +21,7 @@ class _NumbersScreenState extends State<NumbersScreen>
   List<int> _numbers = List.generate(100, (index) => index + 1);
   bool _isColorPickerOpen = false;
   AnimationController
-  _caretAnimationController; // controls the caret in the appbar
+      _caretAnimationController; // controls the caret in the appbar
   AnimationController _shakeAnimationController;
   Color _primeColor = Colors.blue;
   Color _evenColor = Colors.red;

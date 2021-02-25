@@ -59,7 +59,8 @@ class ColorSelector extends StatelessWidget {
     );
   }
 
-  Widget _buildColorIcon(BuildContext context, Color color, String label, NumTypes numType) {
+  Widget _buildColorIcon(
+      BuildContext context, Color color, String label, NumTypes numType) {
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
